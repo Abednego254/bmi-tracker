@@ -4,7 +4,14 @@ import '../widgets/bmi_chart.dart';
 import 'bmi_history_screen.dart';
 
 class BMICalculatorScreen extends StatefulWidget {
-  const BMICalculatorScreen({super.key});
+  final bool isDarkTheme;
+  final ValueChanged<bool> onThemeChanged;
+
+  const BMICalculatorScreen({
+    super.key,
+    required this.isDarkTheme,
+    required this.onThemeChanged,
+  });
 
   @override
   State<BMICalculatorScreen> createState() => _BMICalculatorScreenState();
@@ -42,7 +49,7 @@ class _BMICalculatorScreenState extends State<BMICalculatorScreen> {
       status = "Obese";
     }
 
-    final dateTime = DateTime.now().toString().split('.')[0]; // Remove milliseconds
+    final dateTime = DateTime.now().toString().split('.')[0];
     final entry = "BMI: ${bmi.toStringAsFixed(1)} ($status) | $dateTime";
 
     setState(() {
@@ -56,7 +63,7 @@ class _BMICalculatorScreenState extends State<BMICalculatorScreen> {
   Future<void> _saveToHistory(String entry) async {
     final prefs = await SharedPreferences.getInstance();
     List<String> history = prefs.getStringList('bmi_history') ?? [];
-    history.insert(0, entry); // Newest first
+    history.insert(0, entry);
     await prefs.setStringList('bmi_history', history);
   }
 
@@ -82,13 +89,37 @@ class _BMICalculatorScreenState extends State<BMICalculatorScreen> {
       appBar: AppBar(
         title: const Text("BMI Calculator"),
         actions: [
+          TextButton.icon(
+            onPressed: () => widget.onThemeChanged(!widget.isDarkTheme),
+            icon: Icon(
+              widget.isDarkTheme
+                  ? Icons.wb_sunny_outlined
+                  : Icons.nights_stay_outlined,
+              color: widget.isDarkTheme ? Colors.yellow : Colors.blueGrey,
+              size: 28, // Increased icon size
+            ),
+            label: Text(
+              widget.isDarkTheme ? "Light Mode" : "Dark Mode",
+              style: TextStyle(
+                color: widget.isDarkTheme ? Colors.white : Colors.black,
+                fontSize: 16, // Optional: slightly bigger text
+              ),
+            ),
+            style: TextButton.styleFrom(
+              foregroundColor: Colors.white,
+            ),
+          ),
           IconButton(
-            icon: const Icon(Icons.history),
+            icon: Icon(
+              Icons.history,
+              size: 28, // Increased icon size
+            ),
             onPressed: goToHistory,
             tooltip: "BMI History",
           )
         ],
       ),
+
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16),
         child: Column(
@@ -138,9 +169,8 @@ class _BMICalculatorScreenState extends State<BMICalculatorScreen> {
             ),
             const SizedBox(height: 20),
             if (_calculatedBMI != null) BMIChart(bmi: _calculatedBMI!),
-
             const SizedBox(height: 30),
-            _buildBMICategoryGuide(), // 📌 Added Guide Widget
+            _buildBMICategoryGuide(),
           ],
         ),
       ),
